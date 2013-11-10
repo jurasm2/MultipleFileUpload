@@ -202,7 +202,7 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 		// added MFUFallbackcController to HEAD
 		$script = Html::el('script', array(
 			'type' => 'text/javascript',
-			'src' => self::$baseWWWRoot . 'js/MFUFallbackController.js',
+			'src' => self::$baseWWWRoot . 'MFUFallbackController.js',
 		));
 
 		$out = $script->toString();
