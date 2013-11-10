@@ -52,7 +52,7 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 	 * @var UI\Registrator
 	 */
 	public static $interfaceRegistrator;
-	
+
 	/**
 	 * Root of mfu directory in public folder (used for serving js, css, ...)
 	 * @var type string
@@ -71,7 +71,7 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 
 		// Set default check callback
 		self::$validateFileCallback = callback(__CLASS__, "validateFile");
-		
+
 		// TODO: remove this magic
 		self::$baseWWWRoot = Environment::getHttpRequest()->url->baseUrl . "MultipleFileUpload/";
 	}
@@ -132,7 +132,7 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 		if ($req->getMethod() !== "POST") {
 			return;
 		}
-				
+
 		self::getQueuesModel()->initialize();
 
 		foreach (self::getUIRegistrator()->getInterfaces() AS $interface) {
@@ -164,7 +164,7 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 	}
 
 	/**
-	 * 
+	 *
 	 * @return type
 	 * @throws \Nette\InvalidStateException
 	 */
@@ -199,9 +199,13 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 	}
 
 	public static function getHead() {
-		// TODO: Add MFUFallbackController?
-		
-		$out = "";
+		// added MFUFallbackcController to HEAD
+		$script = Html::el('script', array(
+			'type' => 'text/javascript',
+			'src' => self::$baseWWWRoot . 'js/MFUFallbackController.js',
+		));
+
+		$out = $script->toString();
 		foreach (self::getUIRegistrator()->getInterfaces() AS $interface) {
 			$out .= $interface->renderHeadSection();
 		}
@@ -381,7 +385,7 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 	 */
 	public function getValue() {
 		$data = $this->getQueue()->getFiles();
-		
+
 		// Ořízneme soubory, kterých je více než maximální *počet* souborů
 		// TODO: Nepřesunout jako validační pravidlo?
 		$pocetPolozek = count($data);
@@ -482,12 +486,12 @@ class MultipleFileUpload extends Forms\Controls\UploadControl {
 	 */
 	public static function parseIniSize($value) {
 		$units = array('k' => 1024, 'm' => 1048576, 'g' => 1073741824);
-		
+
 		$unit = strtolower(substr($value, -1));
-		
+
 		if (is_numeric($unit) || !isset($units[$unit]))
 			return $value;
-		
+
 		return ((int) $value) * $units[$unit];
 	}
 
