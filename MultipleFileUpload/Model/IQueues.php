@@ -9,31 +9,31 @@
  * the file license.txt that was distributed with this source code.
  */
 
-
 namespace MultipleFileUpload\Model;
 
-interface IQueues {
+interface IQueues
+{
 
 	/**
-	 * getts life time of file
+	 * Gets life time of file
 	 * @return int
 	 */
 	function getLifeTime();
 
 	/**
-	 * setts life time of file
+	 * Sets life time of file
 	 * @param int $time
 	 */
 	function setLifeTime($time);
 
 	/**
-	 * getts cleaning interval
+	 * Gets cleaning interval
 	 * @return int
 	 */
 	function getCleanInterval();
 
 	/**
-	 * setts cleaning interval
+	 * Sets cleaning interval
 	 * @param int $interval
 	 */
 	function setCleanInterval($interval);
@@ -44,15 +44,15 @@ interface IQueues {
 	function initialize();
 
 	/**
-	 * Getts queue (if needed create)
-	 * @param string $token
+	 * Gets queue (create if needed)
+	 * @param string $id
 	 * @return IQueue
 	 */
 	function getQueue($id);
 
 	/**
-	 * Getts all queues
-	 * @return array of IMFUQueueModel
+	 * Gets all queues
+	 * @return IQueue[]
 	 */
 	function getQueues();
 

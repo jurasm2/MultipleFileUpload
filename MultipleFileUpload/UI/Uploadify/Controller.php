@@ -9,52 +9,49 @@
  * the file license.txt that was distributed with this source code.
  */
 
-
 namespace MultipleFileUpload\UI\Uploadify;
 
 use MultipleFileUpload\MultipleFileUpload;
-use Nette\Environment;
 
 /**
- * Description of MFUUIUploadify
- *
  * @author Jan Kuchař
  */
-class Controller extends \MultipleFileUpload\UI\AbstractInterface {
+class Controller extends \MultipleFileUpload\UI\AbstractInterface
+{
 
 	/**
-	 * Getts interface base url
+	 * Gets interface base url
 	 * @return type string
 	 */
-	function getBaseUrl() {
-		return parent::getBaseUrl()."uploadify";
+	function getBaseUrl()
+	{
+		return parent::getBaseUrl() . "uploadify";
 	}
-	
+
+
 	/**
 	 * Is this upload your upload? (upload from this interface)
 	 */
-	public function isThisYourUpload() {
-		return (
-			Environment::getHttpRequest()->getHeader('user-agent') === 'Shockwave Flash'
-			AND isSet($_POST["sender"])
-			AND $_POST["sender"] == "MFU-Uploadify"
-			);
+	public function isThisYourUpload()
+	{
+		// @see initJS.latte
+		return $this->httpRequest->getPost('sender') === "MFU-Uploadify"; 
 	}
+
 
 	/**
 	 * Handles uploaded files
 	 * forwards it to model
 	 */
-	public function handleUploads() {
-		if (!isset($_POST["token"])) {
+	public function handleUploads()
+	{
+		$token = $this->httpRequest->getPost('token');
+		if (!$token) {
 			return;
 		}
 
-		/* @var $token string */
-		$token = $_POST["token"];
-
-		/* @var $file FileUpload */
-		foreach (Environment::getHttpRequest()->getFiles() AS $file) {
+		foreach ($this->httpRequest->getFiles() AS $file) {
+			/* @var $file \Nette\Http\FileUpload */
 			self::processFile($token, $file);
 		}
 
@@ -65,20 +62,24 @@ class Controller extends \MultipleFileUpload\UI\AbstractInterface {
 		exit;
 	}
 
+
 	/**
 	 * Renders interface to <div>
 	 */
-	public function render(MultipleFileUpload $upload) {
+	public function render(MultipleFileUpload $upload)
+	{
 		$template = $this->createTemplate(dirname(__FILE__) . "/html.latte");
 		$template->uploadifyId = $upload->getHtmlId() . "-uploadifyBox";
 		return $template->__toString(TRUE);
 	}
 
+
 	/**
 	 * Renders JavaScript body of function.
 	 */
-	public function renderInitJavaScript(MultipleFileUpload $upload) {
-		$tpl = $this->createTemplate(dirname(__FILE__) . "/initJS.js");
+	public function renderInitJavaScript(MultipleFileUpload $upload)
+	{
+		$tpl = $this->createTemplate(dirname(__FILE__) . "/initJS.latte");
 		$tpl->sizeLimit = $upload->maxFileSize;
 		$tpl->token = $upload->getToken();
 		$tpl->maxFiles = $upload->maxFiles;
@@ -88,18 +89,23 @@ class Controller extends \MultipleFileUpload\UI\AbstractInterface {
 		return $tpl->__toString(TRUE);
 	}
 
+
 	/**
 	 * Renders JavaScript body of function.
 	 */
-	public function renderDestructJavaScript(MultipleFileUpload $upload) {
+	public function renderDestructJavaScript(MultipleFileUpload $upload)
+	{
 		return $this->createTemplate(dirname(__FILE__) . "/destructJS.js")->__toString(TRUE);
 	}
+
 
 	/**
 	 * Renders set-up tags to <head> attribute
 	 */
-	public function renderHeadSection() {
+	public function renderHeadSection()
+	{
 		return $this->createTemplate(dirname(__FILE__) . "/head.latte")->__toString(TRUE);
 	}
+
 
 }

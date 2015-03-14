@@ -9,33 +9,48 @@
  * the file license.txt that was distributed with this source code.
  */
 
-
 namespace MultipleFileUpload\UI;
 
-use MultipleFileUpload\MultipleFileUpload;
-use Nette\Object;
-use Nette\Http\FileUpload;
+use MultipleFileUpload\MultipleFileUpload,
+	Nette\Environment,
+	Nette\Http\FileUpload,
+	Nette\Http\Request,
+	Nette\Object,
+	Nette\Utils\Callback;
 
 /**
  * Abstract UI Controller
  */
-abstract class AbstractInterface extends Object implements IUserInterface {
-	
+abstract class AbstractInterface extends Object implements IUserInterface
+{
+	/** @var Request */
+	protected $httpRequest;
+
+
+	public function __construct()
+	{
+		$this->httpRequest = Environment::getHttpRequest();
+	}
+
+
 	/**
-	 * Getts interface base url
+	 * Gets interface base url
 	 * @return type string
 	 */
-	function getBaseUrl() {
+	function getBaseUrl()
+	{
 		return MultipleFileUpload::$baseWWWRoot;
 	}
-	
+
+
 	/**
 	 * Process single file
 	 * @param string $token
 	 * @param FileUpload $file
 	 * @return bool
 	 */
-	function processFile($token, $file) {
+	function processFile($token, $file)
+	{
 		// Why not in one condition?
 		// @see http://forum.nettephp.com/cs/viewtopic.php?pid=29556#p29556
 		if (!$file instanceof FileUpload) {
@@ -49,20 +64,22 @@ abstract class AbstractInterface extends Object implements IUserInterface {
 		$isValid = $validateCallback->invoke($file);
 
 		if ($isValid) {
-			MultipleFileUpload::getQueuesModel() // returns: IMFUQueuesModel
-				->getQueue($token) // returns: IMFUQueueModel
+			MultipleFileUpload::getQueuesModel()
+				->getQueue($token)
 				->addFile($file);
 		}
 		return $isValid;
 	}
 
+
 	/**
 	 * @return Template
 	 */
-	protected function createTemplate($file = null) {
+	protected function createTemplate($file = null)
+	{
 		$template = new Template($file);
 
-		$template->baseUrl = \Nette\Environment::getHttpRequest()->url->baseUrl;
+		$template->baseUrl = $this->httpRequest->url->baseUrl;
 		$template->basePath = rtrim($template->baseUrl, '/');
 		$template->interface = $this;
 
@@ -70,5 +87,6 @@ abstract class AbstractInterface extends Object implements IUserInterface {
 
 		return $template;
 	}
+
 
 }

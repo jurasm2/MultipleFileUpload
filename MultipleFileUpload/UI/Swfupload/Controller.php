@@ -10,53 +10,50 @@
  * the file license.txt that was distributed with this source code.
  */
 
-
 namespace MultipleFileUpload\UI\Swfupload;
 
-use Nette\Environment;
-use MultipleFileUpload\MultipleFileUpload;
-use MultipleFileUpload\UI\AbstractInterface;
+use MultipleFileUpload\MultipleFileUpload,
+	MultipleFileUpload\UI\AbstractInterface,
+	Nette\Http\FileUpload;
 
 /**
- * Description of MFUUISwfupload
- *
  * @author Roman Vykuka, Jan Kuchař
  */
-class Controller extends AbstractInterface {
+class Controller extends AbstractInterface
+{
 
 	/**
-	 * Getts interface base url
+	 * Gets interface base url
 	 * @return type string
 	 */
-	function getBaseUrl() {
+	function getBaseUrl()
+	{
 		return parent::getBaseUrl() . "swfupload";
 	}
-	
+
+
 	/**
 	 * Is this upload your upload? (upload from this interface)
 	 */
-	public function isThisYourUpload() {
-		return (
-			Environment::getHttpRequest()->getHeader('user-agent') === 'Shockwave Flash'
-			AND isSet($_POST["sender"])
-			AND $_POST["sender"] == "MFU-Swfupload"
-		);
+	public function isThisYourUpload()
+	{
+		return $this->httpRequest->getPost('sender') === "MFU-Swfupload";
 	}
+
 
 	/**
 	 * Handles uploaded files
 	 * forwards it to model
 	 */
-	public function handleUploads() {
-		if (!isset($_POST["token"])) {
+	public function handleUploads()
+	{
+		$token = $this->httpRequest->getPost('token');
+		if (!$token) {
 			return;
 		}
 
-		/* @var $token string */
-		$token = $_POST["token"];
-
-		/* @var $file \Nette\Http\FileUpload */
-		foreach (Environment::getHttpRequest()->getFiles() AS $file) {
+		/* @var $file FileUpload */
+		foreach ($this->httpRequest->getFiles() AS $file) {
 			self::processFile($token, $file);
 		}
 
@@ -67,20 +64,24 @@ class Controller extends AbstractInterface {
 		exit;
 	}
 
+
 	/**
 	 * Renders interface to <div>
 	 */
-	public function render(MultipleFileUpload $upload) {
+	public function render(MultipleFileUpload $upload)
+	{
 		$template = $this->createTemplate(dirname(__FILE__) . "/html.latte");
 		$template->swfuId = $upload->getHtmlId() . "-swfuBox";
 		return $template->__toString(TRUE);
 	}
 
+
 	/**
 	 * Renders JavaScript body of function.
 	 */
-	public function renderInitJavaScript(MultipleFileUpload $upload) {
-		$tpl = $this->createTemplate(dirname(__FILE__) . "/initJS.js");
+	public function renderInitJavaScript(MultipleFileUpload $upload)
+	{
+		$tpl = $this->createTemplate(dirname(__FILE__) . "/initJS.latte");
 		$tpl->sizeLimit = ini_get('upload_max_filesize') . 'B';
 		$tpl->token = $upload->getToken();
 		$tpl->maxFiles = $upload->maxFiles;
@@ -90,18 +91,23 @@ class Controller extends AbstractInterface {
 		return $tpl->__toString(TRUE);
 	}
 
+
 	/**
 	 * Renders JavaScript body of function.
 	 */
-	public function renderDestructJavaScript(MultipleFileUpload $upload) {
+	public function renderDestructJavaScript(MultipleFileUpload $upload)
+	{
 		return $this->createTemplate(dirname(__FILE__) . "/destructJS.js")->__toString(TRUE);
 	}
+
 
 	/**
 	 * Renders set-up tags to <head> attribute
 	 */
-	public function renderHeadSection() {
+	public function renderHeadSection()
+	{
 		return $this->createTemplate(dirname(__FILE__) . "/head.latte")->__toString(TRUE);
 	}
+
 
 }

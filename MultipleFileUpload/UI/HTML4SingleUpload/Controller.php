@@ -9,36 +9,37 @@
  * the file license.txt that was distributed with this source code.
  */
 
-
 namespace MultipleFileUpload\UI\HTML4SingleUpload;
 
-use Nette\Environment;
-use MultipleFileUpload\MultipleFileUpload;
-
+use MultipleFileUpload\MultipleFileUpload,
+	Nette\Utils\Arrays;
 
 /**
- * Description of MFUUIHTML4SingleUpload
- *
  * @author Jan Kuchař
  */
-class Controller extends \MultipleFileUpload\UI\AbstractInterface {
+class Controller extends \MultipleFileUpload\UI\AbstractInterface
+{
 
 	/**
 	 * Is this upload your upload? (upload from this interface)
 	 */
-	public function isThisYourUpload() {
-		return !(Environment::getHttpRequest()->getHeader('user-agent') === 'Shockwave Flash');
+	public function isThisYourUpload()
+	{
+		return !($this->httpRequest->getHeader('user-agent') === 'Shockwave Flash');
 	}
 
-	/**
-	 * Handles uploaded files
-	 * forwards it to model
-	 */
-	public function handleUploads() {
-		// Iterujeme nad přijatými soubory
-		foreach (Environment::getHttpRequest()->getFiles() AS $name => $controlValue) {
 
-			// MFU vždy posílá soubory v této struktuře:
+	/**
+	 *
+	 * @param array $files
+	 * @param array $names Array of indexes of $files array representing current nesting level. E.g. if we are iterating over $files[k1][k2] then $names=[k1,k2]
+	 */
+	private function processFiles(array $files, array $names = [])
+	{
+		foreach ($files as $name => $controlValue) {
+			$names[] = $name;
+
+			// MFU sends data in this format:
 			//
 			// array(
 			//	"token" => "blablabla",
@@ -47,53 +48,79 @@ class Controller extends \MultipleFileUpload\UI\AbstractInterface {
 			//		...
 			//	)
 			// )
-
+			// expanded POST array with $names indexes
+			$postFromHttpRequest = $this->httpRequest->getPost(); 
+			$postArr = Arrays::getRef($postFromHttpRequest, $names);
 			$isFormMFU = (
 				is_array($controlValue) and
-					isset($controlValue["files"]) and
-					isset($_POST[$name]["token"])
-			);
+				isset($controlValue["files"]) and
+				isset($postArr['token'])
+				);
 
-			if($isFormMFU) {
-				$token = $_POST[$name]["token"];
+			if ($isFormMFU) {
+				$token = $postArr["token"];
 				foreach ($controlValue["files"] AS $file) {
 					self::processFile($token, $file);
 				}
+				// support for nested Nette\Forms\Container
+			} elseif (is_array($controlValue)) {
+				$this->processFiles($controlValue, $names);
 			}
-			// soubory, které se netýkají MFU nezpracujeme -> zpracuje si je standardním způsobem formulář
+			// skip files not processed by MFU
+			// they will be processed by Nette Forms
 		}
+	}
+
+
+	/**
+	 * Handles uploaded files
+	 * forwards it to model
+	 */
+	public function handleUploads()
+	{
+		// Iterate over all received files
+		$this->processFiles($this->httpRequest->getFiles());
 		return true; // Skip all next
 	}
+
 
 	/**
 	 * Renders interface to <div>
 	 */
-	public function render(MultipleFileUpload $upload) {
+	public function render(MultipleFileUpload $upload)
+	{
 		$template = $this->createTemplate(dirname(__FILE__) . "/html.latte");
 		$template->maxFiles = $upload->maxFiles;
 		$template->mfu = $upload;
 		return $template->__toString(TRUE);
 	}
 
-	/**
-	 * Renders JavaScript body of function.
-	 */
-	public function renderInitJavaScript(MultipleFileUpload $upload) {
-		return $this->createTemplate(dirname(__FILE__) . "/initJS.js")->__toString(TRUE);
-	}
 
 	/**
 	 * Renders JavaScript body of function.
 	 */
-	public function renderDestructJavaScript(MultipleFileUpload $upload) {
+	public function renderInitJavaScript(MultipleFileUpload $upload)
+	{
+		return $this->createTemplate(dirname(__FILE__) . "/initJS.latte")->__toString(TRUE);
+	}
+
+
+	/**
+	 * Renders JavaScript body of function.
+	 */
+	public function renderDestructJavaScript(MultipleFileUpload $upload)
+	{
 		return true;
 	}
+
 
 	/**
 	 * Renders set-up tags to <head> attribute
 	 */
-	public function renderHeadSection() {
+	public function renderHeadSection()
+	{
 		return "";
 	}
+
 
 }
