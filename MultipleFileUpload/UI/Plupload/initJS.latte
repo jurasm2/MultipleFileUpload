@@ -6,7 +6,8 @@ var fallbackController = this;
 	// Convert divs to queue widgets when the DOM is ready
 	$(function(){
 		// TODO: auto fallback
-		var uploader = $("#"+{$id|escapeJs|noescape}).pluploadQueue({
+		var uploaderId = "#"+{$id|escapeJs|noescape};
+		var uploader = $(uploaderId).pluploadQueue({
 			// General settings
 			runtimes : 'html5,flash,silverlight,html4',
 			url : {$uploadLink|escapeJs|noescape},
@@ -29,6 +30,11 @@ var fallbackController = this;
 
 		uploader.bind("Error",function(){
 			fallbackController.fallback();
+		});
+
+		// when all files are uploaded -> submit the form to trigger file processing (converting etc..)
+		uploader.bind("UploadComplete",function() {
+			$(uploaderId).closest('form').submit();
 		});
 	});
 
